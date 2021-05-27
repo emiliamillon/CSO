@@ -140,7 +140,7 @@ CSO](https://github.com/emiliamillon/CSO/tree/master/Graficos%20CSO)
 
 ### Income distribution, cumulative income distirbution and Lorenz Total
 
-[Sample chart
+[Sample for chart
 TOTAL](https://github.com/emiliamillon/CSO/blob/master/eph4_0919_sample.csv)
 
 [chart](https://github.com/emiliamillon/CSO/tree/master/Chart%20TOTAL)
