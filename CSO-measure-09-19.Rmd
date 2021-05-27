@@ -1,0 +1,4981 @@
+---
+title: "CSO-measure-09-19"
+author: "Millon, Ma Emilia"
+date: "27/5/2021"
+output: html_document
+---
+---
+title: "Statistic Annex"
+output: github_document
+---
+*The chart and tables correspond to the work publish in  ....*
+
+
+## Participation of Classes Socio Ocupational (CSO) throughtout the period 2009-2019 for Argentina
+
+The source is Encuesta Permanente de Hogares (EPH), compiled by Instituto Nacional de Estadísticas y Censos de Argentina (INDEC)
+
+
+
+### CSO 2019 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+eph4_2009 <- get_microdata(year = 2019,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+## Paso las variables a texto y corrijo 
+
+
+
+
+eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDII)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+#####  Armo cuadro final
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDIH, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDIH),
+					mean2=weighted.mean(ITF,PONDIH),
+					mean3=weighted.mean(P47T,PONDII, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDIIO, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDIH),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[64,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2018 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2018,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+## Paso las variables a texto y corrijo 
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDII)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+#####  GUARDO BS
+
+#write.table(eph4_2009, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph418_CSO.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDIH, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDIH),
+					mean2=weighted.mean(ITF,PONDIH),
+					mean3=weighted.mean(P47T,PONDII, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDIIO, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDIH),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[60,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2017 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2017,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+## Paso las variables a texto y corrijo 
+
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDII)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+#####  GUARDO BS
+
+#write.table(eph4_2009, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph417_CSO.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDIH, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDIH),
+					mean2=weighted.mean(ITF,PONDIH),
+					mean3=weighted.mean(P47T,PONDII, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDIIO, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDIH),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[56,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2016 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2016,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+str(eph4_2009,list.len = 177 )
+
+## Paso las variables a texto y corrijo 
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDII)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+#sum(eph4_2009$IOP, na.rm = TRUE)/sum(eph4_2009$PONDIIO[eph4_2009$PARENTESCO==1], na.rm = TRUE)
+
+
+#####  GUARDO BS
+
+write.table(eph4_2009, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph416_CSO.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+
+#eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/eph320.csv")
+
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDIH, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDIH),
+					mean2=weighted.mean(ITF,PONDIH),
+					mean3=weighted.mean(P47T,PONDII, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDIIO, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDIH),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[52,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+```
+### CSO 2015 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+eph4_2009 <- get_microdata(year = 2015,
+trimester = 2,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+## Paso las variables a texto y corrijo 
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[46,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+```
+### CSO 2014
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2014,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+## Paso las variables a texto y corrijo 
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+#####  GUARDO BS
+
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[44,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+```
+### CSO 2013
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2013,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[40,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+##  ordeno cuadro final de salida
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2012
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2012,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[36,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2011
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2011,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[32,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+```
+### CSO 2010
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+eph4_2009 <- get_microdata(year = 2010,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[28,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+### CSO 2009
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(scales)
+library(eph)
+
+
+eph4_2009 <- get_microdata(year = 2009,
+trimester = 4,
+type= "individual",
+vars ="all" )
+
+eph4_2009 <- as.data.frame(eph4_2009)
+
+
+## Paso las variables a texto y corrijo 
+
+
+
+#eph4_2009$PP04D_COD<- as.character(eph4_2009$PP04D_COD)
+
+
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1"]="00001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="1001"]="01001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="2001"]="02001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="3001"]="03001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="4001"]="04001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5001"]="05001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="5002"]="05002"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="6001"]="06001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="7001"]="07001"
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99999"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99998"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99997"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99993"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99994"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99992"]=""
+eph4_2009$PP04D_COD[eph4_2009$PP04D_COD=="99991"]=""
+
+
+#eph4_2009$PP11D_COD<- as.character(eph4_2009$PP11D_COD)
+
+
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1"]="00001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="1001"]="01001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="5002"]="05002"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="7001"]="07001"
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99999"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99998"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99997"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99993"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99992"]=""
+eph4_2009$PP11D_COD[eph4_2009$PP11D_COD=="99991"]=""
+
+
+eph4_2009<-rename(eph4_2009, PARENTESCO=CH03, EDAD=CH06, COD_OCUPACION=PP04D_COD, NUM_EMP=PP04C, GENERO=CH04 ,
+EQUIPO=PP05C_1 , LOCAL=PP05C_2, VEHICULO=PP05C_3, COD_OCUPACION2=PP11D_COD, NUM_EMP2=PP11C)
+
+
+
+############   Armo ID de jefes de familia y un nuevo pondera e ITF  ####
+
+
+eph4_2009<-mutate(eph4_2009, hogar_id=paste(eph4_2009$CODUSU,eph4_2009$NRO_HOGAR, sep=""))
+
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(CASOS= sum(PONDERA))
+
+eph4_2009<- eph4_2009 %>% 
+		    group_by(hogar_id) %>%
+  			mutate(IPCF_SUM= sum(IPCF))
+
+
+###  CODIGO DE OCUPACION CNO 
+
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP=substr(COD_OCUPACION, star=1, stop=2))
+eph4_2009$CARACTEROCUP[eph4_2009$CARACTEROCUP==""]=NA
+
+eph4_2009<- eph4_2009 %>% mutate(CARACTEROCUP2=substr(COD_OCUPACION2, star=1, stop=2))
+eph4_2009$CARACTEROCUP2[eph4_2009$CARACTEROCUP2==""]=NA
+
+eph4_2009<-mutate(eph4_2009, CARACTER_OCUP= ifelse( is.na(CARACTEROCUP), CARACTEROCUP2,CARACTEROCUP)) 
+
+#table(eph4_2009$CARACTER_OCUP, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA=substr(COD_OCUPACION, star=3, stop=3))
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA==""]<- NA
+eph4_2009$JERARQUIA[eph4_2009$JERARQUIA=="9"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(JERARQUIA2=substr(COD_OCUPACION2, star=3, stop=3))
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2==""]<-  NA
+eph4_2009$JERARQUIA2[eph4_2009$JERARQUIA2=="9"]<- NA
+
+eph4_2009<-mutate(eph4_2009, jerarquia= ifelse( is.na(JERARQUIA), JERARQUIA2,JERARQUIA)) 
+
+eph4_2009$jerarquia<- as.numeric(eph4_2009$jerarquia)
+
+#table(eph4_2009$jerarquia, exclude=NULL)
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION=substr(COD_OCUPACION, star=5, stop=5))
+
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION==""]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="9"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="8"]<- NA
+eph4_2009$CALIFICACION[eph4_2009$CALIFICACION=="7"]<- NA
+
+eph4_2009<- eph4_2009 %>% mutate(CALIFICACION2=substr(COD_OCUPACION2, 
+star=5, stop=5))
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2==""]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="9"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="8"]<- NA
+eph4_2009$CALIFICACION2[eph4_2009$CALIFICACION2=="7"]<- NA
+
+eph4_2009<-mutate(eph4_2009, calificacion= ifelse( is.na(CALIFICACION), CALIFICACION2,CALIFICACION)) 
+
+eph4_2009$calificacion<- as.numeric(eph4_2009$calificacion)
+
+#table(eph4_2009$calificacion, exclude=NULL)
+
+#########         ESTADO SEGUN MERCADO LABORAL
+
+eph4_2009$ESTADO<-as.factor(eph4_2009$ESTADO)
+eph4_2009$ESTADO=factor(eph4_2009$ESTADO, labels=c("Sin entrevista", "Ocupado", "Desocupado","Inactivo","Menor"))
+
+eph4_2009$CAT_OCUP[eph4_2009$CAT_OCUP==9]<- 0
+eph4_2009<- eph4_2009 %>% mutate(CAT_OCUP2=CAT_OCUP)
+
+eph4_2009$CAT_OCUP2<-as.factor(eph4_2009$CAT_OCUP2)
+
+eph4_2009$CAT_OCUP2=factor(eph4_2009$CAT_OCUP2, labels=c(NA, "Patron", "Cuenta Propia", "Obrero",
+					 "Trab_flia"))
+
+
+##############    EMPRESA ( NUM_EMP )
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA= ifelse(NUM_EMP>0 & NUM_EMP<6,  1  
+								, ifelse(NUM_EMP>5 & NUM_EMP<99, 2, 0)))
+
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==1]=1
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==2]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==3]=2
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[eph4_2009$NUM_EMP==99 & eph4_2009$PP04C99==9]=0
+eph4_2009$EMPRESA[is.na(eph4_2009$EMPRESA)]=0
+
+
+
+eph4_2009<- eph4_2009 %>% mutate(EMPRESA2= ifelse(NUM_EMP2>0 & NUM_EMP2<6,  1  
+								, ifelse(NUM_EMP2>5 & NUM_EMP2<99, 2, 0)))
+
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==1]=1
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==2]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==3]=2
+eph4_2009$EMPRESA2[eph4_2009$NUM_EMP2==99 & eph4_2009$PP11C99==9]=0
+eph4_2009$EMPRESA2[is.na(eph4_2009$EMPRESA2)]=0
+
+eph4_2009<- eph4_2009 %>% mutate(empresa= EMPRESA+EMPRESA2)
+
+
+##############         SERVICIO DOMESTICO   
+
+eph4_2009<- eph4_2009 %>% mutate(SERV_DOM= ifelse(CARACTER_OCUP=="55",  1  
+								, ifelse( is.na(CARACTER_OCUP), NA, 2)))
+
+
+##########            MEDIOS DE PRODUCCIÓN 
+
+
+####creo variable propietario de al menos un item  PROP_MEDIO
+
+eph4_2009<- eph4_2009 %>% mutate(PROP_MEDIO= ifelse(EQUIPO==1 | LOCAL==1 | VEHICULO==1, 1 , 
+								ifelse(EQUIPO==2 | LOCAL==2 | VEHICULO==2, 1 , 
+								ifelse(EQUIPO==3 | LOCAL==3 | VEHICULO==3, 2 ,
+								NA))) ) 
+
+#Si tiene o le prestan alguno de los tres se lo considera propietario
+
+
+
+
+##########    ********    CLASES SOCIALES    ******** 
+
+
+
+#############       PROPIETARIAS/OS      ##################
+
+
+eph4_2009<- eph4_2009 %>% mutate( PROPIETARIO= ifelse(CAT_OCUP==1 & empresa==1, 1,
+							     ifelse(CAT_OCUP==1 & empresa==2, 2,
+ 								ifelse(CAT_OCUP==1 & empresa==0, 
+										3	, NA))) )
+
+
+
+#############               DIRECTIVOS/AS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( DIRECCION= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==0 & empresa==1, 1,
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==2, 
+										2	, 
+							    ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+										jerarquia==0 & empresa==0, 
+										3,	NA))) ) 
+
+
+
+#############               ASALARIADAS/OS    ########################
+
+
+eph4_2009<- eph4_2009 %>% mutate( ASALARIAD= ifelse(CAT_OCUP==3 & SERV_DOM!=1 & 
+									jerarquia==2 , 1,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==1, 2,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==2, 3,
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+									calificacion==3, 4, 
+					ifelse(CAT_OCUP==3 & SERV_DOM!=1 & jerarquia==3 & 
+						calificacion==4, 5, 
+								NA )))) ) )
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  is.na(eph4_2009$calificacion)]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ is.na(eph4_2009$jerarquia) &  (eph4_2009$calificacion==1 | 
+eph4_2009$calificacion==2 | eph4_2009$calificacion==3 |
+eph4_2009$calificacion==4)  ]=6 
+
+eph4_2009$ASALARIAD[eph4_2009$CAT_OCUP==3 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$jerarquia==3 &  is.na(eph4_2009$calificacion)]=7 
+
+# el 6 son los empleados sin jerarqui ni calificaicon especificada
+# el 7 son los asalariados empleados sin calificar.
+
+
+
+#############               AUTONOMAS/OS    ########################
+
+eph4_2009<- eph4_2009 %>% mutate( AUTONOM= ifelse(CAT_OCUP==2 & SERV_DOM!=1 , 4,
+									NA ))
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==1 ]=2 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 &
+ eph4_2009$PROP_MEDIO==2 ]=3 
+
+eph4_2009$AUTONOM[eph4_2009$CAT_OCUP==2 & eph4_2009$SERV_DOM!=1 & eph4_2009$calificacion==1]=1 
+
+
+#1 es autonomo profesional
+#2 es autonomo con medio produccion
+#3 es autonomo SIN medio produccion
+#4 es autonomo pero no sabemos si tiene medios de produccion
+
+
+
+###########   Tabla resumen   1       ###############
+
+
+eph4_2009<- eph4_2009 %>% mutate( CS= PROPIETARIO)
+
+eph4_2009$CS[eph4_2009$PROPIETARIO==3]=NA
+eph4_2009$CS[eph4_2009$DIRECCION==1]=1
+eph4_2009$CS[eph4_2009$DIRECCION==2]=3 
+eph4_2009$CS[eph4_2009$ASALARIAD==1]=4
+eph4_2009$CS[eph4_2009$ASALARIAD==2]=5 
+eph4_2009$CS[eph4_2009$ASALARIAD==3]=6
+eph4_2009$CS[eph4_2009$ASALARIAD==4]=7
+eph4_2009$CS[eph4_2009$ASALARIAD==5]=8
+eph4_2009$CS[eph4_2009$AUTONOM==1]=9
+eph4_2009$CS[eph4_2009$AUTONOM==2]=10
+eph4_2009$CS[eph4_2009$AUTONOM==2 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==3]=11
+eph4_2009$CS[eph4_2009$AUTONOM==3 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$AUTONOM==4]=11
+eph4_2009$CS[eph4_2009$AUTONOM==4 & is.na(eph4_2009$calificacion)]=NA
+eph4_2009$CS[eph4_2009$SERV_DOM==1]=12
+
+
+weighted.sd<-function(x, w) ( (sum(w*x*x)/sum(w)) - weighted.mean(x,w)^2 )^.5
+
+eph4_2009<- eph4_2009 %>% mutate( IT= P47T*PONDERA)
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+  mutate(CS_total= CS[which(PARENTESCO==1)] )
+
+eph4_2009<- eph4_2009 %>% mutate( IOP= ifelse( PARENTESCO==1, P21, NA ))
+
+
+
+cuadro_final <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( N = sum(PONDERA, na.rm = TRUE), 
+ 			            N2 = sum(PONDERA, na.rm = TRUE), 
+					mean=weighted.mean(IPCF,PONDERA),
+					mean2=weighted.mean(ITF,PONDERA),
+					mean3=weighted.mean(P47T,PONDERA, na.rm = TRUE),
+					mean4=weighted.mean(IOP,PONDERA, na.rm = TRUE),
+					sd=weighted.sd(IPCF,PONDERA),
+					n=n(),
+					sum_ing = sum(IT, na.rm = TRUE) 		)
+
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.= (N/sum(N, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+                  mutate( Part.2= (N2/sum(N2, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% filter(!is.na(CS_total)) %>%
+mutate( Part_ing= (sum_ing/sum(sum_ing, na.rm = TRUE))*100)
+
+cuadro_final <- cuadro_final %>% 
+                 mutate( CV_N=ifelse(  N<100001 , "20" ,
+                          ifelse(  N>99999 & N<150000 , "19.8" ,
+                          ifelse(  N>149999 & N<200000 , "14.5" ,
+                          ifelse(  N>199999 & N<250000 , "11.6" ,
+                          ifelse(  N>249999 & N<300000 , "9.8" ,
+                          ifelse(  N>299999 & N<350000 , "8.5" ,
+                          ifelse(  N>349999 & N<400000 , "7.5" ,
+                          ifelse(  N>399999 & N<450000 , "6.8" ,
+                          ifelse(  N>449999 & N<500000 , "6.2" ,
+                          ifelse(  N>499999 & N<550000 , "5.7" ,
+                          ifelse(  N>549999 & N<600000 , "5.3" ,
+                          ifelse(  N>599999 & N<650000 , "5.0" ,
+                          ifelse(  N>649999 & N<700000 , "4.7" ,
+                          ifelse(  N>699999 & N<750000 , "4.4" ,
+                          ifelse(  N>749999 & N<800000 , "4.2" ,  
+                          ifelse(  N>799999 & N<850000 , "4.0" ,
+                          
+                          ifelse(  N>849999 & N<900000 , "3.8" ,  
+                          ifelse(  N>899999 & N<950000 , "3.6" ,
+                                   
+                          ifelse(  N>949999 & N<1000000 , "3.5" ,  
+                          ifelse(  N>999999 & N<1050000 , "3.4" ,
+                                   
+                          ifelse(  N>1049999 & N<1100000 , "3.2" ,  
+                          ifelse(  N>1099999 & N<1150000 , "3.1" ,
+                                   
+                          ifelse(  N>1149999 & N<1200000 , "3.0" ,  
+                          ifelse(  N>1199999 & N<1300000 , "2.9" ,
+                                   
+                          ifelse(  N>1299999 & N<1400000 , "2.7" ,  
+                          ifelse(  N>1399999 & N<1500000 , "2.6" ,
+                                   
+                          ifelse(  N>1499999 & N<1600000 , "2.5" ,  
+                          ifelse(  N>1599999 & N<1700000 , "2.3" ,
+                          
+                          ifelse(  N>1699999 & N<1800000 , "2.2" ,
+                                   
+                          ifelse(  N>1799999 & N<1900000 , "2.1" ,
+                          ifelse(  N>1899999 & N<2100000 , "2.0" ,  
+                          ifelse(  N>2199999 & N<2300000 , "1.9" ,
+                          ifelse(  N>2299999 & N<2500000 , "1.8" ,  
+                          ifelse(  N>2499999 & N<2700000 , "1.7" ,
+                          ifelse(  N>2649999 & N<2900000 , "1.6" ,  
+                          ifelse(  N>2900000, "1.5", NA   
+                                   ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )
+
+
+
+#####################                 coef act          ################### 
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act<- DPBI[67,2]/DPBI[24,2]-1
+
+
+cuadro_final$mean <- cuadro_final$mean*(1+coef_act)
+
+cuadro_final$mean2 <- cuadro_final$mean2*(1+coef_act)
+
+
+cuadro_final$mean3 <- cuadro_final$mean3*(1+coef_act)
+
+
+cuadro_final$mean4 <- cuadro_final$mean4*(1+coef_act)
+
+cuadro_final<- as.data.frame(cuadro_final)
+
+Total<- c(14, sum(cuadro_final$N, na.rm = TRUE),sum(cuadro_final$N2, na.rm = TRUE), weighted.mean(cuadro_final$mean,cuadro_final$N2), weighted.mean(cuadro_final$mean2,cuadro_final$N2),weighted.mean(cuadro_final$mean3,cuadro_final$N2), weighted.mean(cuadro_final$mean4,cuadro_final$N2), weighted.mean(cuadro_final$sd,cuadro_final$N2) , sum(cuadro_final$n, na.rm = TRUE),sum(cuadro_final$sum_ing, na.rm = TRUE), sum(cuadro_final$Part., na.rm = TRUE), sum(cuadro_final$Part.2, na.rm = TRUE), sum(cuadro_final$Part_ing, na.rm = TRUE), "" )
+
+
+cuadro_final[nrow(cuadro_final) + 1, ] <- Total
+
+
+
+cuadro_final<- as.data.frame(apply(cuadro_final, MARGIN=2, FUN=as.numeric ))
+
+
+
+cuadro_final$CS_total<-as.factor(cuadro_final$CS_total)
+
+
+
+cuadro_final$CS_total=factor(cuadro_final$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+##  pongo los formatos que quiero
+
+
+cuadro_final$CV<- sprintf("%.2f%%", cuadro_final$CV )
+
+cuadro_final$Part.<- sprintf("%.2f%%", cuadro_final$Part. )
+
+cuadro_final$Part_ing <- sprintf("%.2f%%", cuadro_final$Part_ing  )
+
+
+cuadro_final$N <- format(cuadro_final$N, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean <- format(cuadro_final$mean, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+
+cuadro_final$mean2 <- format(cuadro_final$mean2, digits=0, decimal.mark=".", big.mark=",.", scientific = FALSE )
+
+cuadro_final$mean3 <- format(cuadro_final$mean3, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+cuadro_final$mean4 <- format(cuadro_final$mean4, digits=0, decimal.mark=".", big.mark=",", scientific = FALSE )
+##  ordeno cuadro final de salida
+
+cuadro_CS419<- cuadro_final[, c( "CS_total", "N", "Part.", "CV_N" , "mean","mean2", "Part_ing", "n" ) ]
+
+colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Income household", "% Part. Income", "Coefficient of Variation CSO", "sample" )
+
+cuadro_CS419
+
+```
+
