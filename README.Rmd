@@ -1,6 +1,16 @@
 ---
 title: "Statistic Annex"
 output: github_document
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
 ---
 *The chart and tables correspond to the work publish in  ....*
 
@@ -61,3 +71,8 @@ The source is Encuesta Permanente de Hogares (EPH), compiled by Instituto Nacion
 ### Papers methodology Index
 
 [Review inequality indexs](https://www.fbbva.es/publicaciones/desigualdad-y-bienestar-social-de-la-teoria-a-la-practica/)
+
+
+### CSO 2019 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+```
