@@ -1,0 +1,701 @@
+---
+title: "Boostraping"
+author: "Millon, Ma Emilia"
+date: "27/5/2021"
+output: html_document
+---
+
+### 2019 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(fdth)
+library(Hmisc)
+library(tidyr)
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph419_CSO.csv")
+
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDIIO, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDIIO/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDIIO", "PONDERA", "PONDII", "PONDIH", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )))
+j.1<- as.data.frame( apply(j[,c(1:14)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+#write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_419_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2018 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph418_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDIIO, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDIIO/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDIIO", "PONDERA", "PONDII", "PONDIH", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )))
+j.1<- as.data.frame( apply(j[,c(1:14)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_418_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2017 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph417_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDIIO, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDIIO/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDIIO", "PONDERA", "PONDII", "PONDIH", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )))
+j.1<- as.data.frame( apply(j[,c(1:14)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_417_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+```
+### 2016 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph416_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDIIO, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDIIO/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDIIO", "PONDERA", "PONDII", "PONDIH", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[15,] )))
+j.1<- as.data.frame( apply(j[,c(1:14)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_416_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+```
+
+### 2015 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph215_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_215_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+
+```
+### 2014 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph414_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_414_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2013 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph413_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_413_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2012 
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph412_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_412_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2011
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph411_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_411_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2010
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph410_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_410_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+### 2009
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph409_CSO.csv")
+
+#####     Bootstraping con la variable filtrando solo jefes de hogar
+
+
+side_sampl<-nrow(eph4_2009)
+options(digits=22)
+pondiio<-sum(eph4_2009$PONDERA, na.rm =T)
+eph4_2009 <- eph4_2009 %>%  mutate( Inv_w= PONDERA/pondiio )
+
+sum(eph4_2009$Inv_w, na.rm=T)
+summary(eph4_2009$Inv_w)
+
+eph4_2009.T <- as.data.frame(t(eph4_2009[,c("CS_total", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IOP", "ITF",  "CS", "PONDERA", "Inv_w" , "hogar_id")]))
+
+S1<- sample(eph4_2009.T, side_sampl ,replace=TRUE,  eph4_2009.T[12,] )
+S1<-as.data.frame(t(S1))
+S1<- as.data.frame( apply(S1, MARGIN=2, FUN=as.numeric ) )
+S1<- filter(S1, PARENTESCO==1)
+
+
+B <- 1000
+rho.boot <- rep(0,B)
+result<- aggregate(S1$P21,by=list(CS_total=S1$CS_total), mean )
+for( i in 1:B) {  j=as.data.frame(t(sample(eph4_2009.T, side_sampl ,replace=TRUE, eph4_2009.T[12,] )))
+j.1<- as.data.frame( apply(j[,c(1:11)], MARGIN=2, FUN=as.numeric ) )
+j.1<- filter(j.1,PARENTESCO==1)
+mean.j1 <- aggregate(j.1$P21,by=list(CS_total=j.1$CS_total), mean )
+result[,1+i]<- mean.j1[,2]
+}
+
+apply(result,1,mean)
+
+write.table(result, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_409_2.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+#con filtro de jefe de hogar 4to 2019
+
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_419_2.csv")
+
+#con filtro de jefe de hogar 4to 2018
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_418_2.csv")
+#con filtro de jefe de hogar 4to 2017
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_417_2.csv")
+#con filtro de jefe de hogar 4to 2016
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_416_2.csv")
+#con filtro de jefe de hogar 2to 2015
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_215_2.csv")
+#con filtro de jefe de hogar 4to 2014
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_414_2.csv")
+#con filtro de jefe de hogar 4to 2013
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_413_2.csv")
+#con filtro de jefe de hogar 4to 2012
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_412_2.csv")
+#con filtro de jefe de hogar 4to 2011
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_411_2.csv")
+#con filtro de jefe de hogar 4to 2010
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_410_2.csv")
+#con filtro de jefe de hogar 4to 2009
+result_2 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot1_409_2.csv")
+
+
+###########      con filtro de jefe de hogar
+
+Boostraping_1000<- as.data.frame(apply(result_2,1,mean))
+Boostraping_1000_sd<- as.data.frame(apply(result_2,1,sd))
+result2<- t(result_2)
+result2 <- result2[c(-1),]
+
+#graficos, todo bien por aca
+hist( result2[,1] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,2] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,3] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,4] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,5] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,6] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,7] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,8] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,9] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,10] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,11] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+hist( result2[,12] ,  breaks = 20, main="Histogram bootstrap", freq=FALSE)
+
+Total<- c( mean(apply(result2,1,mean))  )
+Total2<- c( sd(result2) )
+Boostraping_1000[nrow(Boostraping_1000) + 1, ] <- Total
+Boostraping_1000_sd[nrow(Boostraping_1000_sd) + 1, ] <- Total2
+
+Boostraping_1000 <- data.frame( Boostraping_1000, Boostraping_1000_sd)
+
+nrow(result_2)
+ncol(result_2)
+
+#names(Boostraping_1000)[2]<-"Media_Boot"
+
+names(Boostraping_1000)<-c("Media_boot", "Sd_boot")
+
+
+Boostraping_1000 <- Boostraping_1000 %>% 
+                  mutate( CV= (Sd_boot/Media_boot)*100 )
+
+
+#Boostraping_1000$Media_boot <- Boostraping_1000$Media_boot*(1+coef_act)
+
+BOOT_2019<-Boostraping_1000
+BOOT_2018<-Boostraping_1000
+BOOT_2017<-Boostraping_1000
+BOOT_2016<-Boostraping_1000
+BOOT_2015<-Boostraping_1000
+BOOT_2014<-Boostraping_1000
+BOOT_2013<-Boostraping_1000
+BOOT_2012<-Boostraping_1000
+BOOT_2011<-Boostraping_1000
+BOOT_2010<-Boostraping_1000
+
+BOOT_2009<-Boostraping_1000
+
+
+##  Armo cuadro y pongo los formatos que quiero
+
+
+
+cuadro_boot<- data.frame( c(seq(1, 13, 1)), BOOT_2009[, c( "Media_boot" )],  BOOT_2010[, c( "Media_boot" )], BOOT_2011[, c( "Media_boot" )], BOOT_2012[, c( "Media_boot" )], BOOT_2013[, c( "Media_boot" )], BOOT_2014[, c( "Media_boot" )], BOOT_2015[, c( "Media_boot" )], BOOT_2016[, c( "Media_boot" )], BOOT_2017[, c( "Media_boot" )], BOOT_2018[, c( "Media_boot" )], BOOT_2019[, c( "Media_boot" )] )
+
+
+colnames(cuadro_boot)<- c("CSO", "2009", "2010", "2011","2012", "2013","2014","2015","2016","2017","2018","2019")
+
+cuadro_boot$CSO<-as.factor(cuadro_boot$CSO)
+
+cuadro_boot$CSO=factor(cuadro_boot$CSO, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+#Boostraping_1000[,C(2:12)]<- format(Boostraping_1000[,C(2:12)], digits=0, decimal.mark=",", big.mark=".", scientific = FALSE )
+#Boostraping_1000$Sd_boot<- format(Boostraping_1000$Sd_boot, digits=0, decimal.mark=",", big.mark=".", scientific = FALSE )
+
+
+## GRAFICOS DEL INGRSO MEDIO ACTUALIZADO  
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act_19<- DPBI[67,2]/DPBI[64,2]-1
+coef_act_18<- DPBI[67,2]/DPBI[60,2]-1
+coef_act_17<- DPBI[67,2]/DPBI[56,2]-1
+coef_act_16<- DPBI[67,2]/DPBI[52,2]-1
+coef_act_15<- DPBI[67,2]/DPBI[48,2]-1
+coef_act_14<- DPBI[67,2]/DPBI[44,2]-1
+coef_act_13<- DPBI[67,2]/DPBI[40,2]-1
+coef_act_12<- DPBI[67,2]/DPBI[36,2]-1
+coef_act_11<- DPBI[67,2]/DPBI[32,2]-1
+coef_act_10<- DPBI[67,2]/DPBI[28,2]-1
+coef_act_09<- DPBI[67,2]/DPBI[24,2]-1
+
+
+cuadro_boot[,2]<- cuadro_boot[,2]*(1+coef_act_09)
+cuadro_boot[,3]<- cuadro_boot[,3]*(1+coef_act_10)
+cuadro_boot[,4]<- cuadro_boot[,4]*(1+coef_act_11)
+cuadro_boot[,5]<- cuadro_boot[,5]*(1+coef_act_12)
+cuadro_boot[,6]<- cuadro_boot[,6]*(1+coef_act_13)
+cuadro_boot[,7]<- cuadro_boot[,7]*(1+coef_act_14)
+cuadro_boot[,8]<- cuadro_boot[,8]*(1+coef_act_15)
+cuadro_boot[,9]<- cuadro_boot[,9]*(1+coef_act_16)
+cuadro_boot[,10]<- cuadro_boot[,10]*(1+coef_act_17)
+cuadro_boot[,11]<- cuadro_boot[,11]*(1+coef_act_18)
+cuadro_boot[,12]<- cuadro_boot[,12]*(1+coef_act_19)
+
+
+
+
+cuadro_boot<- cuadro_boot[c(1,2,3,4,5,6,9,7,8,10,11,12),]
+
+
+cuadro_boot$CSO<-as.numeric(seq(1,12,1))
+
+rownames(cuadro_boot)<-as.numeric(seq(1,12,1))
+
+cuadro_boot$CSO=factor(cuadro_boot$CSO, labels=c(   "Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work"))
+
+
+
+
+Serie_ime<- gather( cuadro_boot, "year", "ime", 2:12 )  
+
+
+Serie_ime<- Serie_ime %>% mutate(year2=substr(year, star=2, stop=5))
+
+Serie_ime[,4]<-as.numeric(Serie_ime[,4]) 
+
+Serie_ime<-Serie_ime[,-2]
+
+
+
+
+mean_time<- mean(Serie_ime[,2])
+
+
+Serie_ime<- Serie_ime %>% mutate(ime2= ime/mean_time)
+
+
+lbls <- c(seq(2009, 2019, 1))
+
+brks<- c(seq(2009, 2019, 1))
+brk=seq(0, 150000, 10000)
+
+ggplot(data = Serie_ime, aes(x=year2 , y=ime )) + geom_line(aes(color=CSO), size = 1 ) +   geom_point() + scale_x_continuous(breaks=brks,labels = lbls)  +theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),           panel.grid.minor = element_blank()) +    labs(title="Ime real", x="Date",y="pesos 2doT 2020" ) + scale_y_continuous(labels = scales::comma, breaks=brk) + theme(plot.title=element_text( size=20, 
+                                      vjust=1.25, 
+                                      hjust = 0.5
+                                      ))
+###  Grafico clases de 
+
+lbls <- c(seq(2009, 2019, 1))
+
+brks<- c(seq(2009, 2019, 1))
+brk=seq(0, max(Serie_ime$ime2), 0.5 )
+
+ggplot(data = Serie_ime, aes(x=year2 , y=ime2 )) + geom_line(aes(linetype=CSO), size = 1 ) +   geom_point() + scale_x_continuous(breaks=brks,labels = lbls)  +theme(axis.text.x = element_text(angle = 90, vjust=0.5, size = 8),           panel.grid.minor = element_blank()) +    labs(title="Ime real", x="Date",y="relación ingreso medio" ) + scale_y_continuous(labels = scales::comma, breaks=brk) + theme(plot.title=element_text( size=20, 
+                                      vjust=1.25, 
+                                      hjust = 0.5
+                                      ))
+
+cuadro_boot<- cuadro_boot%>% mutate(ime= apply(cuadro_boot[,2:11], 1 , mean) )
+
+brk=seq(0, 100000, 10000)
+ggplot(cuadro_boot, aes(x=CSO, y=ime)) +
+  geom_bar(stat='identity') +
+  coord_flip() + scale_y_continuous(labels = scales::comma, breaks=brk)
+
+
+Serie_ime2<- Serie_ime %>% filter(year2<2010 | Serie_ime$year2>2018)
+
+
+brk=seq(0, 200000, 25000)
+
+Serie_ime2$year2<-as.factor(Serie_ime2$year2)
+
+
+Grafico4<- ggplot(Serie_ime2, aes(x=CSO, y=ime, color=year2)) + geom_bar(stat='identity') + coord_flip() + scale_y_continuous(labels = scales::comma, breaks=brk) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) + theme (text = element_text(size=14)) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + labs( y="Income" )
+
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/Grafico4.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 25,
+     res= 600,       # Resolución
+     units = "cm")  # Unidades.
+Grafico4               # Gráfico
+dev.off() 
+
+
+cuadro_boot<- cuadro_boot%>% mutate(tasa_caida= ((X2019-X2009)/X2019)*100 )
+
+
+write.table(cuadro_boot, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/boot0919_TASA.csv", sep = ",", col.names = TRUE, row.names = FALSE)
+```
+
