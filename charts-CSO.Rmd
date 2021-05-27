@@ -1,0 +1,2179 @@
+---
+title: "Charts by CSO"
+author: "Millon, Ma Emilia"
+date: "27/5/2021"
+output: html_document
+---
+
+##Acomodo bases y agrego adulto equivalente
+2019
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+## Paso a adulto equivalente
+
+
+library(dplyr)
+library(readxl)
+library(xtable)
+library(ggplot2)
+library(fdth)
+
+
+
+eph4_2009 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph419_CSO.csv")
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/25/distribution/25.2/download/indice-precios-implicitos-oferta-demanda-globales-valores-trimestrales-base-2004.csv"
+
+DPBI<- read.csv(read, header = TRUE)
+
+
+DPBI<- data.frame(DPBI[,c(1:2)])
+
+
+coef_act_19<- DPBI[67,2]/DPBI[64,2]-1
+
+
+canasta_bsica_19<- 12103.99*(1+coef_act_19)
+
+
+
+eph4_2009$GENERO<-as.numeric(eph4_2009$GENERO)
+
+eph4_2009 <- eph4_2009 %>% 
+	mutate( adultoequiv= ifelse(EDAD<1,  0.35
+				, ifelse(EDAD==1, 0.37
+				, ifelse(EDAD==2, 0.46
+				, ifelse(EDAD==3, 0.51
+				, ifelse(EDAD==4, 0.55
+        , ifelse(EDAD==5, 0.6
+        , ifelse(EDAD==6, 0.64
+        , ifelse(EDAD==7, 0.66
+        , ifelse(EDAD==8, 0.68
+        , ifelse(EDAD==9, 0.69
+				, ifelse(EDAD==10 & GENERO==1, 0.79
+				, ifelse(EDAD==10 & GENERO==2, 0.7
+				, ifelse(EDAD==11 & GENERO==1, 0.82
+				, ifelse(EDAD==11 & GENERO==2, 0.72
+				, ifelse(EDAD==12 & GENERO==1, 0.85
+				, ifelse(EDAD==12 & GENERO==2, 0.74
+				, ifelse(EDAD==13 & GENERO==1, 0.9
+				, ifelse(EDAD==13 & GENERO==2, 0.76
+				, ifelse(EDAD==14 & GENERO==1, 0.96
+				, ifelse(EDAD==14 & GENERO==2, 0.76				         
+				, ifelse(EDAD==15 & GENERO==1, 1
+				, ifelse(EDAD==15 & GENERO==2, 0.77
+				, ifelse(EDAD==16 & GENERO==1, 1.03 
+				, ifelse(EDAD==16 & GENERO==2, 0.77
+ 				, ifelse(EDAD==17 & GENERO==1, 1.04
+				, ifelse(EDAD==17 & GENERO==2, 0.77
+ 				, ifelse(EDAD>17 & EDAD<30 & GENERO==1, 1.02 
+ 				, ifelse(EDAD>17 & EDAD<30 & GENERO==2, 0.76 
+				, ifelse(EDAD>29 & EDAD<46 & GENERO==1, 1
+   			, ifelse(EDAD>29 & EDAD<46 & GENERO==2, 0.77
+				, ifelse(EDAD>45 & EDAD<61 & GENERO==1, 1
+				, ifelse(EDAD>45 & EDAD<61 & GENERO==2, 0.76				
+				, ifelse(EDAD>60 & EDAD<76 & GENERO==1, 0.83
+				, ifelse(EDAD>60 & EDAD<76 & GENERO==2, 0.67				
+				, ifelse(EDAD>75 & GENERO==1, 0.74
+				, ifelse(EDAD>75 & GENERO==2, 0.63 , NA ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )      )
+
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+    mutate(adultototal= sum(adultoequiv))
+
+eph4_2009$P47T[eph4_2009$P47T<0]<-0
+
+eph4_2009 <- eph4_2009 %>% group_by(hogar_id) %>%
+ 		mutate( IPCF_AE=sum(P47T, na.rm = TRUE)/adultototal)
+
+eph4_2009 <- eph4_2009 %>% mutate(IPCF_act=IPCF*(1+coef_act_19)) 
+eph4_2009 <- eph4_2009 %>% mutate(IPCF_AE_act=IPCF_AE*(1+coef_act_19)) 
+
+eph4_2019<- eph4_2009
+
+
+```
+2009
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+
+setwd("G:/Mi unidad/INVESTIGACION/clases sociales")
+directorio <- "G:/Mi unidad/INVESTIGACION/clases sociales"
+
+eph4_2009<-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph409_CSO.csv")
+
+
+coef_act_09<- DPBI[67,2]/DPBI[24,2]-1
+
+
+#NOTA: AQUI VOY A USAR LA CANASTA BASICA DEL AÑO CORRESPONDIENTE (PROMEDIO DEL ULTIMO TRIMESTRE 2009) Y UTILIZO LOS COEF QUE AJUSTAN LA CBT POR REGION DEL PROMEDIO DEL CUARTO TRIMESTRE 2019 . tAMBIÉN USO LA NUEVA SERIE DE ADULTO EQUIVALENTE.eS DECIR, MANTENGO FIJO TODO ESTO. nO SE SI ME CONVIENE TMB MANTENER LA cbt FIJA, PERO POR LAS DUDAS HARÉ LA DE CADA AÑO.
+
+
+##########      Cálculos de los FGT y LP 4to 2009  ###################
+
+
+canasta_bsica_09<- 342.94*(1+coef_act_09)
+
+
+eph4_2009$GENERO<-as.numeric(eph4_2009$GENERO)
+
+eph4_2009 <- eph4_2009 %>% 
+	mutate( adultoequiv= ifelse(EDAD<1,  0.35
+				, ifelse(EDAD==1, 0.37
+				, ifelse(EDAD==2, 0.46
+				, ifelse(EDAD==3, 0.51
+				, ifelse(EDAD==4, 0.55
+        , ifelse(EDAD==5, 0.6
+        , ifelse(EDAD==6, 0.64
+        , ifelse(EDAD==7, 0.66
+        , ifelse(EDAD==8, 0.68
+        , ifelse(EDAD==9, 0.69
+				, ifelse(EDAD==10 & GENERO==1, 0.79
+				, ifelse(EDAD==10 & GENERO==2, 0.7
+				, ifelse(EDAD==11 & GENERO==1, 0.82
+				, ifelse(EDAD==11 & GENERO==2, 0.72
+				, ifelse(EDAD==12 & GENERO==1, 0.85
+				, ifelse(EDAD==12 & GENERO==2, 0.74
+				, ifelse(EDAD==13 & GENERO==1, 0.9
+				, ifelse(EDAD==13 & GENERO==2, 0.76
+				, ifelse(EDAD==14 & GENERO==1, 0.96
+				, ifelse(EDAD==14 & GENERO==2, 0.76				         
+				, ifelse(EDAD==15 & GENERO==1, 1
+				, ifelse(EDAD==15 & GENERO==2, 0.77
+				, ifelse(EDAD==16 & GENERO==1, 1.03 
+				, ifelse(EDAD==16 & GENERO==2, 0.77
+ 				, ifelse(EDAD==17 & GENERO==1, 1.04
+				, ifelse(EDAD==17 & GENERO==2, 0.77
+ 				, ifelse(EDAD>17 & EDAD<30 & GENERO==1, 1.02 
+ 				, ifelse(EDAD>17 & EDAD<30 & GENERO==2, 0.76 
+				, ifelse(EDAD>29 & EDAD<46 & GENERO==1, 1
+   			, ifelse(EDAD>29 & EDAD<46 & GENERO==2, 0.77
+				, ifelse(EDAD>45 & EDAD<61 & GENERO==1, 1
+				, ifelse(EDAD>45 & EDAD<61 & GENERO==2, 0.76				
+				, ifelse(EDAD>60 & EDAD<76 & GENERO==1, 0.83
+				, ifelse(EDAD>60 & EDAD<76 & GENERO==2, 0.67				
+				, ifelse(EDAD>75 & GENERO==1, 0.74
+				, ifelse(EDAD>75 & GENERO==2, 0.63 , NA ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )      )
+
+
+
+eph4_2009 <- eph4_2009 %>%
+    group_by(hogar_id) %>%
+    mutate(adultototal= sum(adultoequiv))
+
+eph4_2009 <- eph4_2009 %>% group_by(hogar_id) %>%
+ 		mutate( IPCF_AE=sum(P47T, na.rm = TRUE)/adultototal)
+
+eph4_2009<- eph4_2009 %>% mutate( IPCFAE_W= IPCF*PONDERA)
+
+
+
+eph4_2009 <- eph4_2009 %>% mutate(IPCF_act=IPCF*(1+coef_act_09)) 
+eph4_2009 <- eph4_2009 %>% mutate(IPCF_AE_act=IPCF_AE*(1+coef_act_09)) 
+
+
+
+
+```
+
+Empleadxs domestricx - Household Employee for Care and reproductive work
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Armo las distribuciones de ingresos por cada CSO
+#\subsection{Empleadxs domestricx - Household Employee for Care and reproductive work}
+
+
+## Cuando armo Llorenz, los restados cambian mucho para comparar de acuerdo al ponderador que utiliz.
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==12)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==12)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+#LOS DE 2019
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+
+m<- mean(cs_servdom$IPCF_act[cs_servdom$ANO4==2019])
+
+
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+
+
+cs_servdom.T<- as.data.frame(t(cs_servdom))
+
+cs_servdom_2<-sample(cs_servdom.T, 2000 ,replace=TRUE, cs_servdom.T[15,] ) 
+
+cs_servdom_2<-as.data.frame(t(cs_servdom_2) ) 
+
+
+
+####################################################### income distribution 
+
+
+
+CSO_12 <- ggplot(data=subset(cs_servdom, IPCF_AE_act<60000  ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Household Employee for Care and reproductive work') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(50000,100000,150000,200000,250000,300000,350000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000) ) +  theme(legend.position="top") +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +    theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year"))
+  
+CSO_12
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_12.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+ CSO_12
+ dev.off()
+  
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+m<- mean(cs_servdom$IPCF_act[cs_servdom$AÑO==2019 & cs_servdom$IPCF_act>0])
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_12_g2<- ggplot(data=subset(cs_servdom, IPCF_AE_act<60000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Household Employee for Care and reproductive work", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal() +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_12_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_12_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_12_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs( title="Household Employee for Care and reproductive work", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal() +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_12_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_12_g3
+ dev.off()
+
+```
+Autonomous worker without means of production
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# \subsection{Autonomos sin medio de produccion - Autonomous worker without means of production}
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==11)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==11)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+CSO_11_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<60000  ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Autonomous worker without means of production') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(50000,100000,150000,200000,250000,300000,350000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000) ) +  theme(legend.position="top") +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_11_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_11_g1
+dev.off() 
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+m<- mean(cs_servdom$IPCF_act[cs_servdom$AÑO==2019 ])
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+write.table(smvm, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/smvm.csv", 
+  sep = ",", col.names = TRUE, row.names = FALSE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+CSO_11_g2<- ggplot(data=subset(cs_servdom, IPCF_AE_act>0 & IPCF_AE_act<60000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous worker without means of production", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal() +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_11_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_11_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_11_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous worker without means of production", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal() +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+
+ jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_11_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_11_g3
+ dev.off()
+
+
+```
+Autonomous worker with means of production
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#\subsection{Autonomos con medio de produccion - Autonomous worker with means of production}
+
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==10)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==10)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019 ])
+
+
+  
+
+CSO_10_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<80000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Autonomous worker with means of production') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(200000,400000,600000,800000,1000000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000) ) +  theme(legend.position="top")  +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_10_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades..
+CSO_10_g1
+dev.off() 
+
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+m<- mean(cs_servdom$IPCF_act[cs_servdom$AÑO==2019 ])
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_10_g2<-ggplot(data=subset(cs_servdom,  IPCF_AE_act<80000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous worker with means of production", x="IPCFae",y="personas" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal() +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_10_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_10_g2
+ dev.off()
+
+
+# curvita de lorenz
+
+CSO_10_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous worker with means of production", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal() +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_10_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_10_g3
+ dev.off()
+
+```
+Autonomos profesional - Autonomous Professional
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#\subsection{Autonomos profesional - Autonomous Professional}
+cs_servdom_2 <- subset(eph4_2019, CS_total==9)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==9)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+
+CSO_9_g1 <- ggplot(data=subset(cs_servdom, IPCF_AE_act<80000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Autonomous Professional') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(10000,20000,30000,40000,50000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000,80000,100000) ) +  theme(legend.position="top") +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_9_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_9_g1
+dev.off() 
+
+
+#ggsave(filename = "G1.png", plot = G9, width = 12, height = 10, dpi = 300, units = "cm")
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_9_g2 <- ggplot(data=subset(cs_servdom,  IPCF_AE_act<100000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous Professional", x="IPCFae",y="personas" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal() +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_9_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_9_g2
+ dev.off()
+
+
+# curvita de lorenz
+
+CSO_9_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Autonomous Professional", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()  +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_9_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_9_g3
+ dev.off()
+
+
+```
+Salaried Low Qualification
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ #\subsection{ASALARIADX POCO CALIFICADX - Salaried Low Qualification}
+
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==8)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==8)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+
+CSO_8_g1 <- ggplot(data=subset(cs_servdom, IPCF_AE_act<60000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Salaried Low Qualification') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(200000,400000,600000,800000,1000000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000) ) +  theme(legend.position="top") +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_8_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_8_g1
+dev.off() 
+
+
+#ggsave(filename = "G1.png", plot = G9, width = 12, height = 10, dpi = 300, units = "cm")
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_8_g2<- ggplot(data=subset(cs_servdom,  IPCF_AE_act<60000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Low Qualification", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal()  +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_8_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_8_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_8_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Low Qualification", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()   +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_8_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_8_g3
+ dev.off()
+
+```
+ASALARIADX OPERATIVO - Salaried Operative
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ #\subsection{ASALARIADX OPERATIVO - Salaried Operative}
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==7)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==7)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+
+CSO_7_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<70000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Salaried Operative') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(250000,500000,750000,1000000,1250000,1500000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000,80000) ) +  theme(legend.position="top") +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_7_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_7_g1
+dev.off() 
+
+#rm (CSO_10_g1, CSO_10_g2 ,CSO_10_g3 ,CSO_11_g1 ,CSO_11_g2 ,CSO_11_g3, CSO_12, CSO_12_g1, CSO_12_g2, CSO_12_g3)
+#ggsave(filename = "G1.png", plot = G9, width = 12, height = 10, dpi = 300, units = "cm")
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_7_g2<- ggplot(data=subset(cs_servdom,  IPCF_AE_act<80000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Operative", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_7_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_7_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_7_g3 <- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Operative", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()  +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_7_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_7_g3
+ dev.off()
+
+#rm ( CSO_9_g1, CSO_9_g2 ,CSO_9_g3, CSO_8_g3, CSO_8_g2, CSO_8_g1 ,CSO_7_g1,CSO_7_g2)
+ #rm ( CSO_7_g3)
+```
+Asalariadx técnicx - Salaried Technician
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ #\subsection{Asalariadx técnicx - Salaried Technician}
+
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==6)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==6)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+CSO_6_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<80000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Salaried Technician') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(100000,150000,200000,250000,300000)) + scale_x_continuous(labels = scales::comma, breaks=c(5000,10000,20000,30000,40000,50000,60000,80000) ) +  theme(legend.position="top")  +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_6_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_6_g1
+dev.off() 
+
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+
+CSO_6_g2<- ggplot(data=subset(cs_servdom,  IPCF_AE_act<80000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Technician", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +   theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_6_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_6_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_6_g3 <- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Technician", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()   +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_6_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_6_g3
+ dev.off()
+
+```
+Asalariadx profesional - Salaried Professional
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ #\subsection{Asalariadx profesional - Salaried Professional}
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==5)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==5)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+  
+
+CSO_5_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<100000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Salaried Professional') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000,100000) ) +  theme(legend.position="top")
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_5_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_5_g1
+dev.off() 
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 5000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+CSO_5_g2 <- ggplot(data=subset(cs_servdom,  IPCF_AE_act<100000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Professional", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_5_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_5_g2
+ dev.off()
+
+ # curvita de lorenz
+
+CSO_5_g3 <- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Salaried Professional", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal() +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_5_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_5_g3
+ dev.off()
+
+
+
+@
+\subsection{Asalariadx jefx - Chief/Supervision (Salaried)}
+<<echo=FALSE, eval=T, results=hide>>=
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==4)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==4)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+
+CSO_4_g1 <- ggplot(data=subset(cs_servdom, IPCF_AE_act<120000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Chief/Supervision (Salaried)') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(0,20000,40000,60000,80000,100000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,10000,20000,30000,40000,50000,60000,70000,80000,90000,100000,110000,120000) ) +  theme(legend.position="top")
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_4_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_4_g1
+dev.off()
+
+#ggsave(filename = "G1.png", plot = G9, width = 12, height = 10, dpi = 300, units = "cm")
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 25000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_4_g2<-ggplot(data=subset(cs_servdom,  IPCF_AE_act<200000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Chief/Supervision (Salaried)", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +   theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_4_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_4_g2
+ dev.off()
+
+# curvita de lorenz
+
+CSO_4_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Chief/Supervision (Salaried)", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()  +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_4_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_4_g3
+ dev.off()
+
+
+```
+Directivx gran empresa - Director/Manager of big firm
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ #\subsection{Directivx gran empresa - Director/Manager of big firm}
+
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==3)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==3)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+CSO_3_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<200000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Director/Manager of big firm') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(0,5000,10000,15000,20000,25000,30000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,40000,80000,120000,160000,200000) ) +  theme(legend.position="top")  +  theme (text = element_text(size=15))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_3_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_3_g1
+dev.off() 
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 10000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_3_g2<- ggplot(data=subset(cs_servdom,  IPCF_AE_act<100000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Director/Manager of big firm", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_3_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_3_g2
+ dev.off() 
+ 
+# curvita de lorenz
+
+CSO_3_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Director/Manager of big firm", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()  +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_3_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_3_g3
+ dev.off()
+
+
+```
+Propietarx gran empresa - Owner of a big firm
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#\subsection{Propietarx gran empresa - Owner of a big firm}
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==2)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==2)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+CSO_2_g1 <- ggplot(data=subset(cs_servdom, IPCF_AE_act<200000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Ingreso pcae') + ylab('frec abs') + 
+ggtitle('Owner of a big firm') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(0,10000,20000,30000,40000,50000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,20000,40000,60000,80000,100000,120000,140000,160000,180000, 200000) ) +  theme(legend.position="top") +  theme (text = element_text(size=15))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_2_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_2_g1
+dev.off() 
+
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 10000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_2_g2 <- ggplot(data=subset(cs_servdom,  IPCF_AE_act<100000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Owner of a big firm", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_2_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_2_g2
+ dev.off() 
+# curvita de lorenz
+
+CSO_2_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Owner of a big firm", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal() +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_2_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_2_g3
+ dev.off()
+
+
+```
+Owner director of a Small or Medium-Sized enterprise
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#\subsection{Propietarx o Directivx PyME - Owner or director of a Small or Medium-Sized enterprise}
+
+
+
+cs_servdom_2 <- subset(eph4_2019, CS_total==1)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDIH)
+cs_servdom <- cs_servdom_2[idx,]
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2)
+
+cs_servdom_2 <- subset(eph4_2009, CS_total==1)
+
+cs_servdom_2<- data.frame(cs_servdom_2)
+idx <- rep(1:nrow(cs_servdom_2), cs_servdom_2$PONDERA)
+cs_servdom_3 <- cs_servdom_2[idx,]
+
+cs_servdom<-as.data.frame(rbind(cs_servdom[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],cs_servdom_3[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+nrow(cs_servdom)
+
+rm(idx , cs_servdom_2, cs_servdom_3)
+
+cs_servdom<-as.data.frame(cs_servdom)
+
+summary(cs_servdom$IPCF_AE_act)
+
+########       cambio variable año 
+
+
+cs_servdom$ANO4<-as.numeric(cs_servdom$ANO4)
+cs_servdom<-rename(cs_servdom, AÑO=ANO4 )
+cs_servdom$AÑO<-as.factor(cs_servdom$AÑO)
+
+
+###   Lo mismo pero con adulto euqivalente
+
+m<- mean(cs_servdom$IPCF_AE_act[cs_servdom$AÑO==2019])
+
+
+
+
+CSO_1_g1<- ggplot(data=subset(cs_servdom, IPCF_AE_act<200000 ), aes(x=IPCF_AE_act,color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.2, position="identity")+ xlab('Income') + ylab('Frec') + 
+ggtitle('Owner or director of a Small or Medium-Sized enterprise') +
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1)  + scale_y_continuous(labels = scales::comma , breaks=c(0,20000,40000,60000,80000,100000, 120000, 140000)) + scale_x_continuous(labels = scales::comma, breaks=c(0,20000,40000,60000,80000,100000,120000,140000,160000,180000, 200000) ) +  theme(legend.position="top")  +  theme (text = element_text(size=15))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+  
+  
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_1_g1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 300,       # Resolución
+     units = "cm")  # Unidades.
+CSO_1_g1
+dev.off() 
+
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+
+
+cs_servdom <- cs_servdom %>%    mutate(n= 1 )
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(cs_servdom$IPCF_act), 10000)
+
+
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+
+
+###                 LlORENZ POSTA         ################
+
+
+cs_servdom <-cs_servdom[order(cs_servdom$AÑO, cs_servdom$IPCF_AE_act),]
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+cs_servdom <- cs_servdom %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio)
+
+
+CSO_1_g2<- ggplot(data=subset(cs_servdom,  IPCF_AE_act<100000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Owner or director of a Small or Medium-Sized enterprise", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) +  theme (text = element_text(size=10)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+  jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_1_g2.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_1_g2
+ dev.off()
+# curvita de lorenz
+
+CSO_1_g3<- ggplot(data =cs_servdom, aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Owner or director of a Small or Medium-Sized enterprise", x="Income",y="People" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#E7B800"))  + theme_minimal()   +  theme (text = element_text(size=15)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year")) + theme(axis.title = element_text(face="bold", vjust=1.5,  size=rel(1)))
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/CSO_1_g3.jpeg",   
+       height = 11,
+       width = 20,
+       res= 300,       # Resolución
+       units = "cm")  # Unidades.
+CSO_1_g3
+ dev.off()
+
+```
+Graficos distribuciones 2009-2019 por CSO TOTAL
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#\section{Graficos distribuciones 2009-2019 por CSO TOTAL}
+
+
+
+
+## Cuando armo Llorenz, los resultados cambian mucho para comparar de acuerdo al ponderador que utilizo.
+
+
+
+
+eph4_2019 <- eph4_2019[,c("CS_total", "ANO4", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "IOP", "ITF",  "CS",  "PONDERA", "PONDIIO","PONDII", "PONDIH") ] 
+
+eph4_2009 <- eph4_2009[,c("CS_total", "ANO4", "PARENTESCO", "EDAD" , "GENERO", "P21", "P47T","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "IOP", "ITF",  "CS", "PONDERA" ) ] 
+
+
+eph4_2019.T<- as.data.frame(t(eph4_2019))
+
+eph4_2019_2<-sample(eph4_2019.T, 2000 ,replace=TRUE, eph4_2019.T[18,] ) 
+
+eph4_2019_2<-as.data.frame(t(eph4_2019_2) ) 
+
+2000/nrow(eph4_2019)
+
+
+
+eph4_2009.T<- as.data.frame(t(eph4_2009))
+
+eph4_2009_2<-sample(eph4_2009.T, 2000 ,replace=TRUE, eph4_2009.T[15,] ) 
+
+eph4_2009_2<-as.data.frame(t(eph4_2009_2) ) 
+
+
+
+eph4_0919<-as.data.frame(rbind(eph4_2019_2[, c( "ANO4","IPCF", "IPCF_AE","IPCF_act", "IPCF_AE_act", "GENERO")],eph4_2009_2[,c( "ANO4","IPCF", "IPCF_AE", "IPCF_act", "IPCF_AE_act", "GENERO")] ))
+
+
+
+
+
+eph4_0919 <-read.csv("G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph4_0919_sample.csv")
+
+
+#LOS DE 2019
+
+Kurtosis<-function(x) ( (sum( ( x-mean(x)) ^4) )/length(x))/(var(x)^2)
+
+Asimetria<-function(x) ( (sum( ( x-mean(x)) ^3) )/length(x))/(var(x)^3/2)
+
+Kurtosis(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2009])
+Kurtosis(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2019])
+Asimetria(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2009])
+Asimetria(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2019])
+
+Asimetria(eph4_2019$IPCF_AE_act)
+Asimetria(eph4_2009$IPCF_AE_act)
+
+ quantile(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2009], c(.5))
+
+ A_pearson<-function(x) ( mean(x)- median(x))/(var(x)^0.5)
+ 
+ A_pearson(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2019])
+ A_pearson(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2009])
+
+ 
+ 
+eph4_0919$ANO4<-as.numeric(eph4_0919$ANO4)
+
+m<- mean(eph4_0919$IPCF_AE_act[eph4_0919$ANO4==2019 & eph4_0919$IPCF_AE_act>0])
+
+
+
+########       cambio variable año 
+
+
+eph4_0919<-rename(eph4_0919, AÑO=ANO4 )
+eph4_0919$AÑO<-as.factor(eph4_0919$AÑO)
+
+
+###  Tengo el serio problema que no puedo poner bien los valoes del histograma
+
+
+###  GRAFICO FINAL 
+
+
+Grafico1<-ggplot(data=subset(eph4_0919, IPCF_AE_act<180000  ), aes(x=IPCF_AE_act, color=AÑO)) +
+ geom_histogram(aes(y = (..count..)/sum(..count..)),binwidth=5000, fill="white", alpha=0.5, position="identity")+ xlab('Income') + ylab('Frec') + 
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=2) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=2)  + scale_x_continuous(labels = scales::comma, breaks=c(0,25000,50000,75000,100000,125000,150000,200000) ) +  scale_y_continuous(labels = scales::percent) + theme(legend.position="top")  +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year"))
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/Grafico1.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 600,       # Resolución
+     units = "cm")  # Unidades.
+Grafico1               # Gráfico
+dev.off() 
+
+
+
+Grafico1_v2<-ggplot(data=subset(eph4_0919, IPCF_AE_act<180000  ), aes(x=IPCF_AE_act, color=AÑO)) +
+ geom_histogram(binwidth=5000, fill="white", alpha=0.5, position="identity")+ xlab('Income') + ylab('Frec') + 
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=2) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=2)  + scale_x_continuous(labels = scales::comma, breaks=c(0,25000,50000,75000,100000,125000,150000,200000) ) +  scale_y_continuous(labels = scales::percent) + theme(legend.position="top")  +  theme (text = element_text(size=20))+ theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year"))
+  
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/Grafico1_v2.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 20,
+     res= 600,       # Resolución
+     units = "cm")  # Unidades.
+Grafico1               # Gráfico
+dev.off() 
+
+#
+
+
+#############             PERSONAS ACUMULADAS Y LLORENZ
+
+
+eph4_0919 <- eph4_0919 %>%    mutate(n= 1 )
+
+
+eph4_0919 <-eph4_0919[order(eph4_0919$AÑO, eph4_0919$IPCF_act),]
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum= cumsum(IPCF_act) )
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF= cumsum(n) )
+
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_porc= n_acum_IPCF/sum(n)*100 )
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(IPCF_act_acum_porc=IPCF_act_acum/sum(IPCF_act)*100 )
+
+bks=seq(0, 100, 10)
+bks2=seq(0, max(eph4_0919$IPCF_act), 50000)
+
+m<- mean(eph4_0919$IPCF_act[eph4_0919$AÑO==2019 & eph4_0919$IPCF_act>0])
+
+read<- "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv"
+smvm<- read.csv(read, header = TRUE)
+
+#write.table(smvm, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/smvm.csv",  sep = ",", col.names = TRUE, row.names = FALSE)
+smvm_320<- smvm[669,2]
+rm(smvm)
+
+###        Llorenz ipcf
+
+ggplot(data =eph4_0919, aes(x=IPCF_act, y=n_acum_IPCF_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Personas SD acumulada por ingreso PC", x="IPCF",y="personas" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=m),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() 
+
+
+###                 LlORENZ POSTA         ################
+
+
+eph4_0919 <-eph4_0919[order(eph4_0919$AÑO, eph4_0919$IPCF_AE_act),]
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum= cumsum(IPCF_AE_act) )
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE= cumsum(n) )
+
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(n_acum_IPCF_AE_porc= (n_acum_IPCF_AE/sum(n))*100 )
+eph4_0919 <- eph4_0919 %>% group_by(AÑO) %>%
+      mutate(IPCF_AE_act_acum_porc=(IPCF_AE_act_acum/sum(IPCF_AE_act))*100 )
+
+## personas acumuladas (para ver Headcountratio) TODO ESTA A PRECIOS 2DO 2020
+
+ggplot(data=subset(eph4_0919, IPCF_AE_act>0 & IPCF_AE_act<180000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) +
+geom_line(aes(color=AÑO))  +  labs(title="Personas SD acumulada por ingreso PCAE", x="IPCFae",y="personas" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#E7B800")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1) + theme_minimal() + geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1) + theme_minimal()
+
+
+
+# grafica final personas acumuladas
+
+Grafico2<- ggplot(data=subset(eph4_0919, IPCF_AE_act<150000  ), aes(x=IPCF_AE_act, y=n_acum_IPCF_AE_porc)) + geom_line(aes(color=AÑO), size=1.5)  +  labs(x="Income",y="Population" ) + scale_y_continuous(labels = scales::comma, breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks2 ) + scale_color_manual(values=c("#00AFBB", "#FF69B4")) + 
+geom_vline(aes(xintercept=canasta_bsica_09),color="blue", linetype="dashed", size=1.2) +
+geom_vline(aes(xintercept=canasta_bsica_19),color="red", linetype="dashed", size=1.2) +  geom_vline(aes(xintercept=smvm_320),color="green", linetype="dashed", size=1.2) + theme_minimal() +  theme (text = element_text(size=20)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8)))+ guides(color=guide_legend(title="Year"))
+  
+#  #E7B800
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/Grafico2.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 25,
+     res= 600,       # Resolución
+     units = "cm")  # Unidades.
+Grafico2               # Gráfico
+dev.off() 
+
+
+
+# curvita de lorenz
+
+Grafico3<- ggplot(data=subset(eph4_0919, IPCF_AE_act<150000  ), aes( x=n_acum_IPCF_AE_porc, y=IPCF_AE_act_acum_porc)) +
+geom_line(aes(color=AÑO), size=1.2)  +  labs( x="Income",y="Population" ) + scale_y_continuous(labels = scales::comma,  breaks=bks ) + scale_x_continuous(labels = scales::comma, breaks=bks ) + scale_color_manual(values=c("#00AFBB", "#FF69B4"))  + theme_minimal()  +  theme (text = element_text(size=20)) + theme(axis.title.x = element_text(face="bold", vjust=-0.5, size=rel(0.8))) +
+   theme(axis.title.y = element_text(face="bold", vjust=1.5,  size=rel(0.8))) + guides(color=guide_legend(title="Year"))
+
+
+
+jpeg(filename="G:/Mi unidad/INVESTIGACION/clases sociales/GITHUB/CSO_EPH/Grafico3.jpeg",   # Nombre del archivo y extensión
+     height = 11,
+     width = 25,
+     res= 600,       # Resolución
+     units = "cm")  # Unidades.
+Grafico3               # Gráfico
+dev.off() 
+
+
+@
