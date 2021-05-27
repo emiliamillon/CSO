@@ -467,6 +467,8 @@ colnames(cuadro_CS419)<- c("CSO", "People", "% Part.", "Income percapita", "Inco
 
 cuadro_CS419
 
+#write.table(eph4_2019, file = "G:/Mi unidad/INVESTIGACION/clases sociales/bases de datos/eph419_CSO.csv",   sep = ",", col.names = TRUE, row.names = FALSE)
+
 ```
 ### CSO 2018 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
