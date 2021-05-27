@@ -1,0 +1,105 @@
+---
+title: "Index theil"
+author: "Millon, Ma Emilia"
+date: "27/5/2021"
+output: html_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+##########      Cálculos de los indices de theil  ###################
+
+
+cuadro_E_1 <- eph4_2019 %>% group_by(CS_total) %>% 
+ 			summarise( Ent_1= 
+ 			  sum(    (   
+ 			    ( (IPCF_AE*PONDIH)/ sum(IPCF_AE*PONDIH,na.rm = TRUE ) )
+ 			    *log ( IPCF_AE/ weighted.mean(IPCF_AE,PONDIH)  ) 
+ 			      )    , na.rm = TRUE ) ,
+ 			  M_g= weighted.mean(IPCF_AE,PONDIH) , Part_I=sum(IPCF_AE*PONDIH,na.rm = TRUE ), 
+						N= sum(PONDIH, na.rm = TRUE), n=n() )
+
+#NOta. los totales N son distintos porque se usan los ponderadores correspondientes a ingresos.
+
+
+cuadro_E_1 <- cuadro_E_1 %>% filter(!is.na(CS_total)) 
+
+
+cuadro_E_1 <- cuadro_E_1 %>% filter(!is.na(CS_total)) %>%
+                  mutate( T_g= (Part_I/sum(Part_I, na.rm = TRUE) )*log(M_g/weighted.mean(M_g,N)) ) 
+
+
+Total<- c(13, sum(cuadro_E_1$Ent_1*cuadro_E_1$Part_I, na.rm = TRUE)/sum(cuadro_E_1$Part_I, na.rm = TRUE),weighted.mean(cuadro_E_1$M_g,cuadro_E_1$N), sum(cuadro_E_1$Part_I, na.rm = TRUE) , sum(cuadro_E_1$N, na.rm = TRUE), sum(cuadro_E_1$n, na.rm = TRUE),   sum( cuadro_E_1$T_g  , na.rm = TRUE)  )
+
+cuadro_E_1<- as.data.frame(apply(cuadro_E_1, MARGIN=2, FUN=as.numeric ))
+cuadro_E_1[nrow(cuadro_E_1) + 1, ] <- Total
+
+
+
+cuadro_E_1$CS_total<-as.factor(cuadro_E_1$CS_total)
+
+cuadro_E_1<-as.data.frame(cuadro_E_1 )
+
+
+cuadro_E_1$CS_total=factor(cuadro_E_1$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+cuadro_E1_19<-cuadro_E_1
+
+cuadro_E_1 <- eph4_2009 %>% group_by(CS_total) %>% 
+ 			summarise( Ent_1= 
+ 			  sum(    (   
+ 			    ( (IPCF_AE*PONDERA)/ sum(IPCF_AE*PONDERA,na.rm = TRUE ) )
+ 			    *log ( IPCF_AE/ weighted.mean(IPCF_AE,PONDERA)  ) 
+ 			      )    , na.rm = TRUE ) ,
+ 			  M_g= weighted.mean(IPCF_AE,PONDERA) , Part_I=sum(IPCF_AE*PONDERA,na.rm = TRUE ), 
+						N= sum(PONDERA, na.rm = TRUE), n=n() )
+
+#NOta. los totales N son distintos porque se usan los ponderadores correspondientes a ingresos.
+
+
+cuadro_E_1 <- cuadro_E_1 %>% filter(!is.na(CS_total)) 
+
+
+cuadro_E_1 <- cuadro_E_1 %>% filter(!is.na(CS_total)) %>%
+                  mutate( T_g= (Part_I/sum(Part_I, na.rm = TRUE) )*log(M_g/weighted.mean(M_g,N)) ) 
+
+
+Total<- c(13, sum(cuadro_E_1$Ent_1*cuadro_E_1$Part_I, na.rm = TRUE)/sum(cuadro_E_1$Part_I, na.rm = TRUE),weighted.mean(cuadro_E_1$M_g,cuadro_E_1$N), sum(cuadro_E_1$Part_I, na.rm = TRUE) , sum(cuadro_E_1$N, na.rm = TRUE), sum(cuadro_E_1$n, na.rm = TRUE),   sum( cuadro_E_1$T_g  , na.rm = TRUE)  )
+
+cuadro_E_1<- as.data.frame(apply(cuadro_E_1, MARGIN=2, FUN=as.numeric ))
+cuadro_E_1[nrow(cuadro_E_1) + 1, ] <- Total
+
+
+
+cuadro_E_1$CS_total<-as.factor(cuadro_E_1$CS_total)
+
+cuadro_E_1<-as.data.frame(cuadro_E_1 )
+
+
+cuadro_E_1$CS_total=factor(cuadro_E_1$CS_total, labels=c("Owner or director of a Small or Medium-Sized enterprise", 
+  "Owner of a big firm", 
+  "Director/Manager of big firm", 
+  "Chief/Supervision (Salaried)", 
+  "Salaried Professional", 
+  "Salaried Technician", 
+  "Autonomous Professional", 
+  "Salaried Operative" , 
+  "Salaried Low Qualification",
+"Autonomous worker with means of production", 
+"Autonomous worker without means of production", 
+"Household Employee for Care and reproductive work", "Total"))
+
+
+cuadro_E1_09<-cuadro_E_1
+```
