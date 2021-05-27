@@ -1,16 +1,7 @@
 ---
 title: "Statistic Annex"
 output: github_document
-output:
-  html_notebook:
-    toc: yes
-    toc_float: yes
-  html_document:
-    toc: yes
-  pdf_document:
-    toc: yes
-  word_document:
-    toc: yes
+
 ---
 *The chart and tables correspond to the work publish in  ....*
 
