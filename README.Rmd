@@ -45,93 +45,68 @@ The source is Encuesta Permanente de Hogares (EPH), compiled by Instituto Nacion
 
 #### CSO 11 - Autonomous worker without means of production
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_11_g1.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO11.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_11_g2.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_11_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 10 - Autonomous worker with means of production
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_10_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_10_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO10.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_10_g3.jpeg?raw=true){width='500px' height='1200px'}
+
 
 #### CSO 9 - Autonomous Professional
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_9_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_9_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO09.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_9_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 8 - Salaried Low Qualification
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_8_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_8_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO08.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_8_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 7 - Salaried Operative
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_7_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_7_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO07.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_7_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 
 #### CSO 6 - Salaried Technician
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_6_g1.jpeg?raw=true){width='500px' height='1200px'}
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_6_g2.jpeg?raw=true){width='500px' height='1200px'}
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_6_g3.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO06.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 5 - Salaried Professional
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_5_g1.jpeg?raw=true){width='500px' height='1200px'}
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_5_g2.jpeg?raw=true){width='500px' height='1200px'}
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_5_g3.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO05.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 4 - Chief/Supervision (Salaried)
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_4_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_4_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO04.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_4_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 3 - Director/Manager of big firm
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_3_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_3_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO03.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_3_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 #### CSO 2 - Owner of a big firm
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_2_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_2_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO02.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_2_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 
 #### CSO 1 - Owner or director of a Small or Medium-Sized enterprise
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_1_g1.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_1_g2.jpeg?raw=true){width='500px' height='1200px'}
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO01.jpeg?raw=true){width='500px' height='1200px'}
 
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_1_g3.jpeg?raw=true){width='500px' height='1200px'}
 
 ### Thei Index
 
