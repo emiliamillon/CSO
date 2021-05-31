@@ -46,47 +46,47 @@ CSO](https://github.com/emiliamillon/CSO/tree/master/Graficos%20CSO)
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO12.jpeg?raw=true)
 
-#### CSO 11 - Autonomous worker without means of production
+## CSO 11 - Autonomous worker without means of production
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO11.jpeg?raw=true)
 
-#### CSO 10 - Autonomous worker with means of production
+## CSO 10 - Autonomous worker with means of production
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO10.jpeg?raw=true)
 
-#### CSO 9 - Autonomous Professional
+## CSO 9 - Autonomous Professional
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO09.jpeg?raw=true)
 
-#### CSO 8 - Salaried Low Qualification
+## CSO 8 - Salaried Low Qualification
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO08.jpeg?raw=true)
 
-#### CSO 7 - Salaried Operative
+## CSO 7 - Salaried Operative
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO07.jpeg?raw=true)
 
-#### CSO 6 - Salaried Technician
+## CSO 6 - Salaried Technician
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO06.jpeg?raw=true)
 
-#### CSO 5 - Salaried Professional
+## CSO 5 - Salaried Professional
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO05.jpeg?raw=true)
 
-#### CSO 4 - Chief/Supervision (Salaried)
+## CSO 4 - Chief/Supervision (Salaried)
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO04.jpeg?raw=true)
 
-#### CSO 3 - Director/Manager of big firm
+## CSO 3 - Director/Manager of big firm
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO03.jpeg?raw=true)
 
-#### CSO 2 - Owner of a big firm
+## CSO 2 - Owner of a big firm
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO02.jpeg?raw=true)
 
-#### CSO 1 - Owner or director of a Small or Medium-Sized enterprise
+## CSO 1 - Owner or director of a Small or Medium-Sized enterprise
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO01.jpeg?raw=true)
 
