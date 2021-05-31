@@ -3,7 +3,7 @@ Statistic Annex
 
 *The chart and tables correspond to the work publish in ….*
 
-## Participation of Classes Socio Ocupational (CSO) throughtout the period 2009-2019 for Argentina
+## Participation of Socio Occupational Condition (CSO in Spanish) throughtout the period 2009-2019 for Argentina
 
 The source is Encuesta Permanente de Hogares (EPH), compiled by
 Instituto Nacional de Estadísticas y Censos de Argentina (INDEC)
@@ -36,13 +36,15 @@ R](https://github.com/emiliamillon/CSO/blob/master/charts-CSO.Rmd)
 [Charts
 CSO](https://github.com/emiliamillon/CSO/tree/master/Graficos%20CSO)
 
-#### CSO 12 - Household Employee for Care and reproductive work
+# CSO 12 - Household Employee for Care and reproductive work
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12.jpeg?raw=true)
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12_g2.jpeg?raw=true)
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12_g3.jpeg?raw=true)
+
+![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO12.jpeg?raw=true)
 
 #### CSO 11 - Autonomous worker without means of production
 
