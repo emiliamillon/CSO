@@ -10,12 +10,16 @@ Instituto Nacional de Estadísticas y Censos de Argentina (INDEC)
 
 ### CSO - share population and Coeficients of Variance
 
+-----
+
 [Estimate in
 R](https://github.com/emiliamillon/CSO/blob/master/CSO-measure-09-19.Rmd)
 
 [Tables](https://github.com/emiliamillon/CSO/blob/master/cuadros_cso_tiempo.xlsx)
 
 ### Mean income bootstraping
+
+-----
 
 [Estimate in
 R](https://github.com/emiliamillon/CSO/blob/master/boot-estimate.Rmd)
@@ -30,19 +34,15 @@ change](https://github.com/emiliamillon/CSO/blob/master/boot0919_TASA.csv)
 
 ### Income distribution, cumulative income distirbution and Lorenz curve by CSO
 
+-----
+
 [Estimate in
 R](https://github.com/emiliamillon/CSO/blob/master/charts-CSO.Rmd)
 
 [Charts
 CSO](https://github.com/emiliamillon/CSO/tree/master/Graficos%20CSO)
 
-# CSO 12 - Household Employee for Care and reproductive work
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12.jpeg?raw=true)
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12_g2.jpeg?raw=true)
-
-![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO_12_g3.jpeg?raw=true)
+## CSO 12 - Household Employee for Care and reproductive work
 
 ![](https://github.com/emiliamillon/CSO/blob/master/Graficos%20CSO/CSO12.jpeg?raw=true)
 
